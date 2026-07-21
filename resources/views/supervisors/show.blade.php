@@ -3,7 +3,7 @@
 @section('title', 'كارت المشرف — ' . $supervisor->name)
 
 @section('content')
-<div x-data="{ warningOpen: {{ $errors->has('reason') ? 'true' : 'false' }} }">
+<div x-data="{ warningOpen: {{ $errors->has('reason') ? 'true' : 'false' }}, excuseOpen: {{ $errors->hasAny(['date', 'excuse_reason', 'excuse_attachment']) ? 'true' : 'false' }} }">
 <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
     <div>
         <h1 class="text-2xl font-bold text-slate-900">{{ $supervisor->name }}</h1>
@@ -32,6 +32,12 @@
         <button type="button" @click="warningOpen = true"
                 class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             + إنذار / مخالفة
+        </button>
+        @endcan
+        @can('save-attendance-records')
+        <button type="button" @click="excuseOpen = true"
+                class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+            + تسجيل عذر غياب
         </button>
         @endcan
         @can('delete-supervisors')
@@ -262,6 +268,53 @@
             <div class="flex gap-3">
                 <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg">تسجيل الإنذار</button>
                 <button type="button" @click="warningOpen = false" class="text-sm text-slate-600 px-5 py-2.5">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endcan
+
+{{-- Excuse Modal --}}
+@can('save-attendance-records')
+<div x-show="excuseOpen"
+     x-cloak
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="display: none;">
+    <div class="fixed inset-0 bg-black/50" @click="excuseOpen = false"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6" @click.stop>
+        <h3 class="text-lg font-bold text-slate-900 mb-4">تسجيل عذر غياب</h3>
+        <p class="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            سيتم تسجيل حالة <strong>غياب بعذر</strong> للمشرف في اليوم المحدد. إذا كان هناك سجل حضور سابق لنفس اليوم سيتم استبداله.
+        </p>
+        <form method="POST" action="{{ route('supervisors.excuses.store', $supervisor) }}" enctype="multipart/form-data">
+            @csrf
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">تاريخ الغياب</label>
+                <input type="date" name="date" required value="{{ old('date', now()->toDateString()) }}"
+                       class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                @error('date')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">سبب العذر</label>
+                <textarea name="excuse_reason" rows="4" required
+                          class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">{{ old('excuse_reason') }}</textarea>
+                @error('excuse_reason')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">مرفق العذر (صورة / PDF) — اختياري</label>
+                <input type="file" name="excuse_attachment" accept=".jpg,.jpeg,.png,.pdf"
+                       class="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200">
+                @error('excuse_attachment')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="flex gap-3">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg">تسجيل العذر</button>
+                <button type="button" @click="excuseOpen = false" class="text-sm text-slate-600 px-5 py-2.5">إلغاء</button>
             </div>
         </form>
     </div>

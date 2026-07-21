@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
+use App\Models\Supervisor;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -64,6 +65,58 @@ class AttendanceService
             }
 
             return $session->fresh(['records.supervisor', 'schoolClass']);
+        });
+    }
+
+    public function grantExcuse(
+        Supervisor $supervisor,
+        User $user,
+        string $date,
+        string $reason,
+        ?UploadedFile $attachment = null,
+        bool $allowReopen = false
+    ): AttendanceRecord {
+        return DB::transaction(function () use ($supervisor, $user, $date, $reason, $attachment, $allowReopen) {
+            $session = AttendanceSession::firstOrCreate(
+                [
+                    'date' => $date,
+                    'school_class_id' => $supervisor->school_class_id,
+                ],
+                [
+                    'created_by_user_id' => $user->id,
+                    'status' => 'open',
+                ]
+            );
+
+            if ($session->isClosed()) {
+                if (! $allowReopen) {
+                    throw new \RuntimeException('جلسة الحضور لهذا اليوم مغلقة. يرجى التواصل مع المسؤول لإعادة فتحها.');
+                }
+
+                $session->update(['status' => 'open']);
+            }
+
+            $existing = $session->records()->where('supervisor_id', $supervisor->id)->first();
+
+            $attachmentPath = null;
+            if ($attachment) {
+                if ($existing?->excuse_attachment) {
+                    $this->deleteAttachment($existing->excuse_attachment);
+                }
+                $attachmentPath = $attachment->store('excuse-attachments', 'public');
+            }
+
+            return AttendanceRecord::updateOrCreate(
+                [
+                    'attendance_session_id' => $session->id,
+                    'supervisor_id' => $supervisor->id,
+                ],
+                [
+                    'status' => 'excused',
+                    'excuse_reason' => $reason,
+                    'excuse_attachment' => $attachmentPath ?? $existing?->excuse_attachment,
+                ]
+            );
         });
     }
 

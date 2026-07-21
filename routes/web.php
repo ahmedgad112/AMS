@@ -11,6 +11,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\SupervisorController;
+use App\Http\Controllers\SupervisorExcuseController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WarningController;
 use Illuminate\Support\Facades\Route;
@@ -124,6 +125,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:create-warnings')->post('supervisors/{supervisor}/warnings', [WarningController::class, 'store'])
         ->name('supervisors.warnings.store');
+    Route::middleware('permission:save-attendance-records')->post('supervisors/{supervisor}/excuses', [SupervisorExcuseController::class, 'store'])
+        ->name('supervisors.excuses.store');
 
     Route::middleware('permission:view-reports')->prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
