@@ -56,7 +56,21 @@
     لا يوجد مشرفين نشطين في هذا الفصل.
 </div>
 @else
-<form method="POST" action="{{ route('attendance.sessions.records.store', $session) }}"
+@can('delete-attendance-records')
+@foreach($supervisors as $supervisor)
+@php $existing = $recordsBySupervisor->get($supervisor->id); @endphp
+@if($existing && $session->isOpen())
+<form id="delete-record-{{ $existing->id }}"
+      action="{{ route('attendance.sessions.records.destroy', [$session, $existing]) }}"
+      method="POST" class="hidden">
+    @csrf
+    @method('DELETE')
+</form>
+@endif
+@endforeach
+@endcan
+
+<form id="save-records-form" method="POST" action="{{ route('attendance.sessions.records.store', $session) }}"
       enctype="multipart/form-data"
       class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
     @csrf
@@ -148,11 +162,10 @@
                     <td class="px-6 py-4 align-top">
                         @if($existing)
                         @can('delete-attendance-records')
-                        <form action="{{ route('attendance.sessions.records.destroy', [$session, $existing]) }}" method="POST"
-                              onsubmit="return confirm('حذف سجل حضور {{ $supervisor->name }}؟')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">مسح</button>
-                        </form>
+                        <button type="submit"
+                                form="delete-record-{{ $existing->id }}"
+                                onclick="return confirm('حذف سجل حضور {{ $supervisor->name }}؟')"
+                                class="text-red-600 hover:text-red-800 text-xs font-medium">مسح</button>
                         @endcan
                         @endif
                     </td>
