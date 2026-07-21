@@ -22,6 +22,34 @@ class PermissionSyncService
         }
 
         $this->migrateLegacyPermissions();
+        $this->ensureProtectedRolesHaveAllPermissions();
+    }
+
+    public function ensureProtectedRolesHaveAllPermissions(): void
+    {
+        $allNames = PermissionCatalog::allNames();
+
+        foreach (PermissionCatalog::protectedRoles() as $roleName) {
+            $role = Role::query()
+                ->where('name', $roleName)
+                ->where('guard_name', 'web')
+                ->first();
+
+            if (! $role) {
+                continue;
+            }
+
+            $assigned = $role->permissions()->pluck('name')->all();
+            $missing = array_diff($allNames, $assigned);
+
+            if ($missing === []) {
+                continue;
+            }
+
+            $role->syncPermissions($allNames);
+        }
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 
     protected function migrateLegacyPermissions(): void

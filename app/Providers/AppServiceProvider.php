@@ -24,9 +24,13 @@ class AppServiceProvider extends ServiceProvider
 
         $hash = md5(implode('|', PermissionCatalog::allNames()));
 
+        $permissionSync = app(PermissionSyncService::class);
+
         if (Cache::get('permissions.config_hash') !== $hash) {
-            app(PermissionSyncService::class)->sync();
+            $permissionSync->sync();
             Cache::forever('permissions.config_hash', $hash);
+        } else {
+            $permissionSync->ensureProtectedRolesHaveAllPermissions();
         }
 
         View::composer('*', function ($view) {
