@@ -6,12 +6,14 @@ use App\Exports\SupervisorsTemplateExport;
 use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Controllers\Concerns\HandlesExcelImport;
 use App\Services\ActivityLogger;
+use App\Http\Requests\BulkDeleteSupervisorsRequest;
 use App\Http\Requests\BulkUpdateTrainingDaysRequest;
 use App\Http\Requests\ImportExcelRequest;
 use App\Http\Requests\StoreSupervisorRequest;
 use App\Http\Requests\UpdateSupervisorRequest;
 use App\Models\SchoolClass;
 use App\Models\Supervisor;
+use App\Models\User;
 use App\Services\SupervisorImportService;
 use App\Support\ClassAuthorization;
 use Illuminate\Http\RedirectResponse;
@@ -31,20 +33,8 @@ class SupervisorController extends Controller
         $user = auth()->user();
         $filters = $request->only(['search', 'school_class_id', 'status', 'warnings']);
 
-        $supervisors = Supervisor::query()
+        $supervisors = $this->filteredSupervisorsQuery($request, $user)
             ->with('schoolClass')
-            ->when(! $user->canAccessAllClasses(), fn ($q) => $q->whereIn('school_class_id', $user->assignedClassIds()))
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $term = $request->input('search');
-                $q->where(function ($query) use ($term) {
-                    $query->where('name', 'like', "%{$term}%")
-                        ->orWhere('phone', 'like', "%{$term}%");
-                });
-            })
-            ->when($request->filled('school_class_id'), fn ($q) => $q->where('school_class_id', $request->school_class_id))
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
-            ->when($request->input('warnings') === 'active', fn ($q) => $q->where('active_warnings_count', '>', 0))
-            ->when($request->input('warnings') === 'deducted', fn ($q) => $q->where('deducted_days', '>', 0))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -208,6 +198,56 @@ class SupervisorController extends Controller
             ->with('success', "تم تحديث أيام التدريب لـ {$count} مشرف بنجاح.");
     }
 
+    public function bulkDestroy(BulkDeleteSupervisorsRequest $request): RedirectResponse
+    {
+        $this->authorizePermission('delete-supervisors');
+
+        $user = auth()->user();
+
+        if ($request->boolean('delete_all_filtered')) {
+            $supervisors = $this->filteredSupervisorsQuery($request, $user)->get();
+        } else {
+            $ids = $request->input('supervisor_ids', []);
+
+            $supervisors = Supervisor::query()
+                ->whereIn('id', $ids)
+                ->when(! $user->canAccessAllClasses(), fn ($q) => $q->whereIn('school_class_id', $user->assignedClassIds()))
+                ->get();
+
+            if ($supervisors->count() !== count($ids)) {
+                abort(403);
+            }
+        }
+
+        if ($supervisors->isEmpty()) {
+            return back()->with('error', 'لم يتم تحديد أي مشرفين للحذف.');
+        }
+
+        foreach ($supervisors as $supervisor) {
+            ClassAuthorization::abortUnlessCanAccess($user, $supervisor->school_class_id);
+        }
+
+        $count = $supervisors->count();
+
+        foreach ($supervisors as $supervisor) {
+            $supervisor->delete();
+        }
+
+        ActivityLogger::log(
+            "حذف {$count} مشرف دفعة واحدة",
+            'bulk_delete',
+            'supervisors',
+            null,
+            [
+                'count' => $count,
+                'delete_all_filtered' => $request->boolean('delete_all_filtered'),
+                'filters' => $request->only(['search', 'school_class_id', 'status', 'warnings']),
+            ]
+        );
+
+        return back()->with('success', "تم حذف {$count} مشرف بنجاح.");
+    }
+
     public function importTemplate(): BinaryFileResponse
     {
         $this->authorizePermission('import-supervisors');
@@ -222,5 +262,22 @@ class SupervisorController extends Controller
         $result = $importService->import($this->readExcelRows($request));
 
         return $this->redirectWithImportResult($result, 'supervisors.index', 'مشرف');
+    }
+
+    private function filteredSupervisorsQuery(Request $request, User $user)
+    {
+        return Supervisor::query()
+            ->when(! $user->canAccessAllClasses(), fn ($q) => $q->whereIn('school_class_id', $user->assignedClassIds()))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $term = $request->input('search');
+                $q->where(function ($query) use ($term) {
+                    $query->where('name', 'like', "%{$term}%")
+                        ->orWhere('phone', 'like', "%{$term}%");
+                });
+            })
+            ->when($request->filled('school_class_id'), fn ($q) => $q->where('school_class_id', $request->school_class_id))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
+            ->when($request->input('warnings') === 'active', fn ($q) => $q->where('active_warnings_count', '>', 0))
+            ->when($request->input('warnings') === 'deducted', fn ($q) => $q->where('deducted_days', '>', 0));
     }
 }

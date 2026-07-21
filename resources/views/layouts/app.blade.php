@@ -40,7 +40,10 @@
                 @include('layouts.partials.nav-links', ['mobile' => false])
             </nav>
             <div class="p-4 border-t border-slate-700">
-                <div class="text-sm text-slate-400 mb-2">{{ auth()->user()->name }}</div>
+                <a href="{{ route('profile.edit') }}"
+                   class="block text-sm text-slate-300 hover:text-white mb-2 truncate transition {{ request()->routeIs('profile.*') ? 'text-white font-medium' : '' }}">
+                    {{ auth()->user()->name }}
+                </a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="w-full text-right text-sm text-red-400 hover:text-red-300 transition">تسجيل الخروج</button>
@@ -77,7 +80,11 @@
                 <div class="p-4 border-b border-slate-700 flex items-center justify-between gap-3">
                     <div class="min-w-0">
                         <x-brand-logo size="sm" />
-                        <p class="text-slate-400 text-xs mt-2 truncate">{{ auth()->user()->name }}</p>
+                        <a href="{{ route('profile.edit') }}"
+                           @click="mobileNavOpen = false"
+                           class="block text-slate-400 hover:text-white text-xs mt-2 truncate transition {{ request()->routeIs('profile.*') ? 'text-white font-medium' : '' }}">
+                            {{ auth()->user()->name }}
+                        </a>
                     </div>
                     <button type="button"
                             @click="mobileNavOpen = false"

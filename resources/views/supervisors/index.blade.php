@@ -3,7 +3,49 @@
 @section('title', 'المشرفين')
 
 @section('content')
-<div x-data="{ trainingDaysOpen: {{ $errors->hasAny(['total_training_days', 'school_class_id', 'status']) ? 'true' : 'false' }} }">
+@php
+    $pageIds = $supervisors->pluck('id')->values();
+@endphp
+<div x-data="{
+    trainingDaysOpen: {{ $errors->hasAny(['total_training_days', 'school_class_id', 'status']) ? 'true' : 'false' }},
+    selected: [],
+    selectAllFiltered: false,
+    pageIds: @js($pageIds),
+    totalCount: {{ $supervisors->total() }},
+    isPageFullySelected() {
+        return this.pageIds.length > 0 && this.pageIds.every(id => this.selected.includes(id));
+    },
+    togglePage(checked) {
+        if (checked) {
+            this.selected = [...new Set([...this.selected, ...this.pageIds])];
+        } else {
+            this.selected = this.selected.filter(id => !this.pageIds.includes(id));
+            this.selectAllFiltered = false;
+        }
+    },
+    selectAllMatching() {
+        this.selectAllFiltered = true;
+        this.selected = [...this.pageIds];
+    },
+    clearSelection() {
+        this.selected = [];
+        this.selectAllFiltered = false;
+    },
+    deleteCount() {
+        return this.selectAllFiltered ? this.totalCount : this.selected.length;
+    },
+    confirmBulkDelete(event) {
+        const count = this.deleteCount();
+        if (count === 0) {
+            event.preventDefault();
+            alert('يرجى تحديد مشرف واحد على الأقل للحذف.');
+            return;
+        }
+        if (! confirm(`هل أنت متأكد من حذف ${count} مشرف؟ سيتم حذف سجل حضورهم وإنذاراتهم.`)) {
+            event.preventDefault();
+        }
+    }
+}">
 <div class="flex items-center justify-between mb-6">
     <div>
         <h1 class="text-2xl font-bold text-slate-900">المشرفين</h1>
@@ -103,10 +145,55 @@
 </div>
 
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    @can('delete-supervisors')
+    <form id="bulk-delete-form" method="POST" action="{{ route('supervisors.bulk-destroy') }}" @submit="confirmBulkDelete($event)">
+        @csrf
+        @method('DELETE')
+        <input type="hidden" name="delete_all_filtered" value="1" x-bind:disabled="!selectAllFiltered">
+        <input type="hidden" name="search" value="{{ $filters['search'] ?? '' }}" x-bind:disabled="!selectAllFiltered">
+        <input type="hidden" name="school_class_id" value="{{ $filters['school_class_id'] ?? '' }}" x-bind:disabled="!selectAllFiltered">
+        <input type="hidden" name="status" value="{{ $filters['status'] ?? '' }}" x-bind:disabled="!selectAllFiltered">
+        <input type="hidden" name="warnings" value="{{ $filters['warnings'] ?? '' }}" x-bind:disabled="!selectAllFiltered">
+
+        <div x-show="selected.length > 0 || selectAllFiltered"
+             x-cloak
+             class="px-6 py-3 bg-red-50 border-b border-red-200 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <span class="font-medium text-red-800">
+                تم تحديد <span x-text="deleteCount()"></span> مشرف
+            </span>
+            <div class="flex gap-2">
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+                    حذف المحدد
+                </button>
+                <button type="button" @click="clearSelection()" class="text-red-700 hover:text-red-900 px-3 py-2">
+                    إلغاء التحديد
+                </button>
+            </div>
+        </div>
+
+        <div x-show="isPageFullySelected() && !selectAllFiltered && totalCount > pageIds.length"
+             x-cloak
+             class="px-6 py-2 bg-indigo-50 border-b border-indigo-200 text-sm text-indigo-800 text-center">
+            تم تحديد كل المشرفين في هذه الصفحة.
+            <button type="button" @click="selectAllMatching()" class="font-semibold underline mr-1">
+                تحديد كل {{ $supervisors->total() }} مشرف
+            </button>
+        </div>
+    </form>
+    @endcan
+
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-slate-50 text-slate-600">
                 <tr>
+                    @can('delete-supervisors')
+                    <th class="px-4 py-3 w-10">
+                        <input type="checkbox"
+                               class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                               :checked="selectAllFiltered || isPageFullySelected()"
+                               @change="togglePage($event.target.checked)">
+                    </th>
+                    @endcan
                     <th class="text-right px-6 py-3 font-semibold">الاسم</th>
                     <th class="text-right px-6 py-3 font-semibold">الهاتف</th>
                     <th class="text-right px-6 py-3 font-semibold">الفصل</th>
@@ -119,7 +206,18 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse($supervisors as $supervisor)
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50" :class="(selectAllFiltered || selected.includes({{ $supervisor->id }})) ? 'bg-indigo-50/50' : ''">
+                    @can('delete-supervisors')
+                    <td class="px-4 py-3">
+                        <input type="checkbox"
+                               form="bulk-delete-form"
+                               name="supervisor_ids[]"
+                               value="{{ $supervisor->id }}"
+                               x-model.number="selected"
+                               :disabled="selectAllFiltered"
+                               class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    </td>
+                    @endcan
                     <td class="px-6 py-3 font-medium">{{ $supervisor->name }}</td>
                     <td class="px-6 py-3">{{ $supervisor->phone ?? '—' }}</td>
                     <td class="px-6 py-3">{{ $supervisor->schoolClass->name }}</td>
@@ -153,7 +251,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="px-6 py-8 text-center text-slate-400">
+                <tr><td colspan="{{ auth()->user()->can('delete-supervisors') ? 9 : 8 }}" class="px-6 py-8 text-center text-slate-400">
                     @if(collect($filters)->filter()->isNotEmpty())
                         لا توجد نتائج مطابقة للفلتر
                     @else

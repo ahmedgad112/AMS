@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicSupervisorEvaluationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
@@ -32,6 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
     Route::post('impersonate/leave', [ImpersonationController::class, 'destroy'])
         ->name('impersonate.leave');
+
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/', DashboardController::class)->name('dashboard');
 
@@ -97,6 +101,8 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('permission:edit-supervisors')->post('supervisors/bulk-training-days', [SupervisorController::class, 'bulkUpdateTrainingDays'])
         ->name('supervisors.bulk-training-days');
+    Route::middleware('permission:delete-supervisors')->delete('supervisors/bulk-delete', [SupervisorController::class, 'bulkDestroy'])
+        ->name('supervisors.bulk-destroy');
     Route::middleware('permission:view-supervisors')->get('supervisors/{supervisor}', [SupervisorController::class, 'show'])
         ->name('supervisors.show');
     Route::middleware('permission:edit-supervisors')->group(function () {
