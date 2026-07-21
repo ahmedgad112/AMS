@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'لوحة التحكم') — {{ config('app.name', 'نظام الحضور') }}</title>
+    @include('partials.favicon')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased">
@@ -12,8 +13,8 @@
         {{-- Sidebar --}}
         <aside class="no-print w-64 bg-slate-900 text-white flex-shrink-0 hidden lg:flex flex-col">
             <div class="p-6 border-b border-slate-700">
-                <h1 class="text-lg font-bold leading-tight">جامعة برج العرب التكنولوجية</h1>
-                <p class="text-slate-400 text-sm mt-1">نظام إدارة الحضور والتقييم</p>
+                <x-brand-logo size="md" class="mx-auto mb-3" />
+                <p class="text-slate-400 text-sm text-center">نظام إدارة الحضور والتقييم</p>
             </div>
             <nav class="flex-1 p-4 space-y-1">
                 <a href="{{ route('dashboard') }}"
@@ -82,7 +83,9 @@
         {{-- Main content --}}
         <div class="flex-1 flex flex-col min-w-0">
             <header class="no-print bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between lg:hidden">
-                <span class="font-bold text-slate-800">نظام الحضور</span>
+                <div class="flex items-center gap-3">
+                    <x-brand-logo size="sm" />
+                </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="text-sm text-red-600">خروج</button>

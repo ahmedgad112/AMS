@@ -4,13 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>استعلام التقييم — جامعة برج العرب التكنولوجية</title>
+    @include('partials.favicon')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 min-h-screen font-sans antialiased">
     <div class="min-h-screen flex flex-col items-center justify-center p-4 py-10">
         <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-white">جامعة برج العرب التكنولوجية</h1>
-            <p class="text-indigo-300 mt-2 text-sm">استعلام عن التقييم والإنذارات</p>
+            <x-brand-logo size="lg" class="mx-auto mb-4" />
+            <p class="text-indigo-300 text-sm">استعلام عن التقييم والإنذارات</p>
         </div>
 
         <div class="w-full max-w-lg">

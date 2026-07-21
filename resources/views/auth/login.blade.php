@@ -4,13 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>تسجيل الدخول — نظام الحضور</title>
+    @include('partials.favicon')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 min-h-screen flex items-center justify-center p-4 font-sans antialiased">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-white">جامعة برج العرب التكنولوجية</h1>
-            <p class="text-indigo-300 mt-2 text-sm">نظام إدارة حضور وغياب المشرفين</p>
+            <x-brand-logo size="lg" class="mx-auto mb-4" />
+            <p class="text-indigo-300 text-sm">نظام إدارة حضور وغياب المشرفين</p>
         </div>
 
         <div class="bg-white rounded-2xl shadow-2xl p-8">

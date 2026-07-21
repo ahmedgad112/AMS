@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>استمارة مشرف — {{ $supervisor->name }}</title>
+    @include('partials.favicon')
     @vite(['resources/css/app.css'])
     <style>
         @media print {
@@ -17,7 +18,7 @@
     </div>
 
     <header class="text-center border-b-2 border-slate-800 pb-6 mb-8">
-        <h1 class="text-xl font-bold">جامعة برج العرب التكنولوجية</h1>
+        <x-brand-logo size="lg" class="mx-auto mb-4" />
         <h2 class="text-lg font-semibold mt-2">استمارة مشرف تدريب</h2>
         <p class="text-sm text-slate-500 mt-1">تاريخ الطباعة: {{ now()->format('Y-m-d') }}</p>
     </header>
