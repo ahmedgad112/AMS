@@ -6,6 +6,7 @@ use App\Exports\SupervisorsTemplateExport;
 use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Controllers\Concerns\HandlesExcelImport;
 use App\Services\ActivityLogger;
+use App\Http\Requests\BulkUpdateTrainingDaysRequest;
 use App\Http\Requests\ImportExcelRequest;
 use App\Http\Requests\StoreSupervisorRequest;
 use App\Http\Requests\UpdateSupervisorRequest;
@@ -163,6 +164,48 @@ class SupervisorController extends Controller
 
         return redirect()->route('supervisors.index')
             ->with('success', 'تم حذف المشرف بنجاح.');
+    }
+
+    public function bulkUpdateTrainingDays(BulkUpdateTrainingDaysRequest $request): RedirectResponse
+    {
+        $this->authorizePermission('edit-supervisors');
+
+        $user = auth()->user();
+
+        $query = Supervisor::query()
+            ->when(! $user->canAccessAllClasses(), fn ($q) => $q->whereIn('school_class_id', $user->assignedClassIds()))
+            ->when($request->filled('school_class_id'), function ($q) use ($request, $user) {
+                ClassAuthorization::abortUnlessCanAccess($user, $request->integer('school_class_id'));
+                $q->where('school_class_id', $request->school_class_id);
+            })
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status));
+
+        $count = (clone $query)->count();
+
+        if ($count === 0) {
+            return back()
+                ->withInput()
+                ->with('error', 'لا يوجد مشرفين مطابقين للمعايير المحددة.');
+        }
+
+        $days = $request->integer('total_training_days');
+        $query->update(['total_training_days' => $days]);
+
+        ActivityLogger::log(
+            "تحديث أيام التدريب إلى {$days} لـ {$count} مشرف",
+            'bulk_update',
+            'supervisors',
+            null,
+            [
+                'total_training_days' => $days,
+                'count' => $count,
+                'school_class_id' => $request->input('school_class_id'),
+                'status' => $request->input('status'),
+            ]
+        );
+
+        return redirect()->route('supervisors.index')
+            ->with('success', "تم تحديث أيام التدريب لـ {$count} مشرف بنجاح.");
     }
 
     public function importTemplate(): BinaryFileResponse

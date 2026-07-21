@@ -3,6 +3,7 @@
 @section('title', 'المشرفين')
 
 @section('content')
+<div x-data="{ trainingDaysOpen: {{ $errors->hasAny(['total_training_days', 'school_class_id', 'status']) ? 'true' : 'false' }} }">
 <div class="flex items-center justify-between mb-6">
     <div>
         <h1 class="text-2xl font-bold text-slate-900">المشرفين</h1>
@@ -23,6 +24,12 @@
             :template-route="route('supervisors.import.template')"
             :import-route="route('supervisors.import')"
         />
+        @endcan
+        @can('edit-supervisors')
+        <button type="button" @click="trainingDaysOpen = true"
+                class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-lg transition">
+            تعديل أيام التدريب
+        </button>
         @endcan
         @can('create-supervisors')
         <a href="{{ route('supervisors.create') }}"
@@ -103,6 +110,7 @@
                     <th class="text-right px-6 py-3 font-semibold">الاسم</th>
                     <th class="text-right px-6 py-3 font-semibold">الهاتف</th>
                     <th class="text-right px-6 py-3 font-semibold">الفصل</th>
+                    <th class="text-right px-6 py-3 font-semibold">أيام التدريب</th>
                     <th class="text-right px-6 py-3 font-semibold">الأيام المخصومة</th>
                     <th class="text-right px-6 py-3 font-semibold">إنذارات نشطة</th>
                     <th class="text-right px-6 py-3 font-semibold">الحالة</th>
@@ -115,6 +123,7 @@
                     <td class="px-6 py-3 font-medium">{{ $supervisor->name }}</td>
                     <td class="px-6 py-3">{{ $supervisor->phone ?? '—' }}</td>
                     <td class="px-6 py-3">{{ $supervisor->schoolClass->name }}</td>
+                    <td class="px-6 py-3 font-medium">{{ $supervisor->total_training_days }}</td>
                     <td class="px-6 py-3">
                         @if($supervisor->deducted_days > 0)
                             <span class="text-red-600 font-semibold">{{ $supervisor->deducted_days }}</span>
@@ -144,7 +153,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="px-6 py-8 text-center text-slate-400">
+                <tr><td colspan="8" class="px-6 py-8 text-center text-slate-400">
                     @if(collect($filters)->filter()->isNotEmpty())
                         لا توجد نتائج مطابقة للفلتر
                     @else
@@ -158,5 +167,72 @@
     @if($supervisors->hasPages())
     <div class="px-6 py-4 border-t border-slate-200">{{ $supervisors->links() }}</div>
     @endif
+</div>
+
+@can('edit-supervisors')
+<div x-show="trainingDaysOpen"
+     x-cloak
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="display: none;">
+    <div class="fixed inset-0 bg-black/50" @click="trainingDaysOpen = false"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6" @click.stop>
+        <h3 class="text-lg font-bold text-slate-900 mb-2">تعديل أيام التدريب للمشرفين</h3>
+        <p class="text-sm text-slate-600 mb-4">
+            حدّد عدد الأيام الجديد وسيتم تطبيقه على كل المشرفين المطابقين للمعايير.
+        </p>
+        <form method="POST" action="{{ route('supervisors.bulk-training-days') }}" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">عدد أيام التدريب</label>
+                <input type="number" name="total_training_days" min="1" max="365" required
+                       value="{{ old('total_training_days', 30) }}"
+                       class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                @error('total_training_days')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">الفصل</label>
+                <select name="school_class_id"
+                        class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option value="">كل الفصول</option>
+                    @foreach($classes as $class)
+                    <option value="{{ $class->id }}" {{ old('school_class_id') == $class->id ? 'selected' : '' }}>
+                        {{ $class->name }}
+                    </option>
+                    @endforeach
+                </select>
+                @error('school_class_id')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">الحالة</label>
+                <select name="status"
+                        class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option value="">كل الحالات</option>
+                    <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>نشط فقط</option>
+                    <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>مكتمل فقط</option>
+                    <option value="suspended" {{ old('status') === 'suspended' ? 'selected' : '' }}>موقوف فقط</option>
+                </select>
+                @error('status')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <p class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                سيتم استبدال عدد أيام التدريب الحالي للمشرفين المحددين. الأيام المخصومة لن تتغير.
+            </p>
+            <div class="flex gap-3 pt-1">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg">
+                    تطبيق على المشرفين
+                </button>
+                <button type="button" @click="trainingDaysOpen = false" class="text-sm text-slate-600 px-5 py-2.5">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endcan
 </div>
 @endsection

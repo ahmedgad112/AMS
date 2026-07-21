@@ -95,6 +95,8 @@ Route::middleware('auth')->group(function () {
         Route::post('supervisors/import', [SupervisorController::class, 'import'])
             ->name('supervisors.import');
     });
+    Route::middleware('permission:edit-supervisors')->post('supervisors/bulk-training-days', [SupervisorController::class, 'bulkUpdateTrainingDays'])
+        ->name('supervisors.bulk-training-days');
     Route::middleware('permission:view-supervisors')->get('supervisors/{supervisor}', [SupervisorController::class, 'show'])
         ->name('supervisors.show');
     Route::middleware('permission:edit-supervisors')->group(function () {
