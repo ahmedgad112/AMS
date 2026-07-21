@@ -73,7 +73,8 @@
 
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1.5">الهاتف</label>
-                    <input type="text" name="phone" value="{{ old('phone', $user->phone) }}"
+                    <input type="tel" name="phone" value="{{ old('phone', $user->phone) }}"
+                           inputmode="numeric" maxlength="11" pattern="01[0-9]{9}" placeholder="01xxxxxxxxx"
                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                     @error('phone')<p class="text-red-600 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>

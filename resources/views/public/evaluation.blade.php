@@ -30,6 +30,7 @@
                     <div>
                         <label for="phone" class="block text-sm font-medium text-slate-700 mb-1.5">رقم التليفون</label>
                         <input type="tel" name="phone" id="phone" value="{{ $phone ?? '' }}" required autofocus
+                               inputmode="numeric" maxlength="11" pattern="01[0-9]{9}"
                                placeholder="01xxxxxxxxx"
                                class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
                         @error('phone')

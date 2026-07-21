@@ -4,12 +4,14 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class SupervisorsTemplateExport implements FromArray, ShouldAutoSize, WithHeadings, WithStyles, WithTitle
+class SupervisorsTemplateExport implements FromArray, ShouldAutoSize, WithColumnFormatting, WithHeadings, WithStyles, WithTitle
 {
     public function array(): array
     {
@@ -27,6 +29,13 @@ class SupervisorsTemplateExport implements FromArray, ShouldAutoSize, WithHeadin
     public function title(): string
     {
         return 'المشرفين';
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'B' => NumberFormat::FORMAT_TEXT,
+        ];
     }
 
     public function styles(Worksheet $sheet): array

@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesPhone;
 use App\Support\ClassAuthorization;
+use App\Support\PhoneNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreSupervisorRequest extends FormRequest
 {
+    use NormalizesPhone;
     public function authorize(): bool
     {
         if (! $this->user()?->can('create-supervisors')) {
@@ -24,7 +27,7 @@ class StoreSupervisorRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => PhoneNormalizer::validationRules(),
             'school_class_id' => ['required', 'integer', 'exists:school_classes,id'],
             'total_training_days' => ['required', 'integer', 'min:1', 'max:365'],
             'status' => ['required', Rule::in(['active', 'completed', 'suspended'])],
@@ -37,6 +40,7 @@ class StoreSupervisorRequest extends FormRequest
             'name.required' => 'اسم المشرف مطلوب.',
             'school_class_id.required' => 'الفصل مطلوب.',
             'total_training_days.required' => 'إجمالي أيام التدريب مطلوب.',
+            ...PhoneNormalizer::validationMessages(),
         ];
     }
 }

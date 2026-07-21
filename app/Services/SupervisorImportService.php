@@ -7,6 +7,7 @@ use App\Models\Supervisor;
 use App\Models\User;
 use App\Support\ClassAuthorization;
 use App\Support\ImportResult;
+use App\Support\PhoneNormalizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +26,7 @@ class SupervisorImportService
                 $rowNumber = $index + 2;
 
                 $name = trim((string) ($row[0] ?? ''));
-                $phone = trim((string) ($row[1] ?? ''));
+                $phone = PhoneNormalizer::normalize($this->rawPhoneValue($row[1] ?? ''));
                 $className = trim((string) ($row[2] ?? ''));
 
                 if ($name === '' && $className === '') {
@@ -34,6 +35,12 @@ class SupervisorImportService
 
                 if ($name === '') {
                     $result->skip($rowNumber, 'اسم المشرف مطلوب.');
+
+                    continue;
+                }
+
+                if ($phone !== '' && ! PhoneNormalizer::isValid($phone)) {
+                    $result->skip($rowNumber, 'رقم الهاتف يجب أن يكون 11 رقم ويبدأ بـ 01.');
 
                     continue;
                 }
@@ -80,5 +87,18 @@ class SupervisorImportService
         });
 
         return $result;
+    }
+
+    protected function rawPhoneValue(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        if (is_numeric($value)) {
+            return sprintf('%.0f', (float) $value);
+        }
+
+        return trim((string) $value);
     }
 }

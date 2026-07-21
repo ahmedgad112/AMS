@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesPhone;
+use App\Support\PhoneNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class StoreUserRequest extends FormRequest
 {
+    use NormalizesPhone;
     public function authorize(): bool
     {
         return $this->user()?->can('create-users') ?? false;
@@ -18,7 +21,7 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => PhoneNormalizer::validationRules(),
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'string', Rule::exists('roles', 'name')->where('guard_name', 'web')],
             'class_ids' => ['nullable', 'array'],
@@ -53,6 +56,7 @@ class StoreUserRequest extends FormRequest
             'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.',
             'role.required' => 'الدور مطلوب.',
             'role.exists' => 'الدور المحدد غير موجود.',
+            ...PhoneNormalizer::validationMessages(),
         ];
     }
 }

@@ -2,10 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesPhone;
+use App\Support\PhoneNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SupervisorInquiryRequest extends FormRequest
 {
+    use NormalizesPhone;
+
     public function authorize(): bool
     {
         return true;
@@ -14,15 +18,12 @@ class SupervisorInquiryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'phone' => ['required', 'string', 'min:10', 'max:20'],
+            'phone' => PhoneNormalizer::validationRules(required: true),
         ];
     }
 
     public function messages(): array
     {
-        return [
-            'phone.required' => 'يرجى إدخال رقم التليفون.',
-            'phone.min' => 'رقم التليفون غير صحيح.',
-        ];
+        return PhoneNormalizer::validationMessages();
     }
 }
