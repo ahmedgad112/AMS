@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Services\ImpersonationService;
 use App\Services\PermissionSyncService;
 use App\Support\PermissionCatalog;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,5 +28,18 @@ class AppServiceProvider extends ServiceProvider
             app(PermissionSyncService::class)->sync();
             Cache::forever('permissions.config_hash', $hash);
         }
+
+        View::composer('*', function ($view) {
+            if (! auth()->check()) {
+                return;
+            }
+
+            $impersonation = app(ImpersonationService::class);
+
+            $view->with([
+                'isImpersonating' => $impersonation->isImpersonating(),
+                'impersonator' => $impersonation->impersonator(),
+            ]);
+        });
     }
 }

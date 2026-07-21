@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\PublicSupervisorEvaluationController;
+use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchoolClassController;
@@ -27,6 +28,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
+    Route::post('impersonate/leave', [ImpersonationController::class, 'destroy'])
+        ->name('impersonate.leave');
 
     Route::get('/', DashboardController::class)->name('dashboard');
 
@@ -40,6 +43,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:manage-users')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
+        Route::post('users/{user}/impersonate', [ImpersonationController::class, 'store'])
+            ->name('users.impersonate');
     });
 
     Route::middleware('permission:manage-roles')->group(function () {

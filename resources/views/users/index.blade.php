@@ -38,6 +38,13 @@
                     </td>
                     <td class="px-6 py-3">{{ $user->schoolClasses->pluck('name')->join('، ') ?: '—' }}</td>
                     <td class="px-6 py-3">
+                        @if($user->id !== auth()->id() && !($isImpersonating ?? false))
+                        <form action="{{ route('users.impersonate', $user) }}" method="POST" class="inline ml-3"
+                              onsubmit="return confirm('الدخول بحساب {{ $user->name }}؟')">
+                            @csrf
+                            <button type="submit" class="text-emerald-600 hover:text-emerald-800">دخول كـ</button>
+                        </form>
+                        @endif
                         <a href="{{ route('users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-800">تعديل</a>
                         @if($user->id !== auth()->id())
                         <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline mr-3"

@@ -9,6 +9,22 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased">
+    @if($isImpersonating ?? false)
+    <div class="no-print bg-amber-500 text-amber-950 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-sm font-medium">
+        <span>
+            أنت تعرض النظام كـ <strong>{{ auth()->user()->name }}</strong>
+            @if($impersonator)
+                (حسابك: {{ $impersonator->name }})
+            @endif
+        </span>
+        <form method="POST" action="{{ route('impersonate.leave') }}">
+            @csrf
+            <button type="submit" class="bg-amber-950/10 hover:bg-amber-950/20 px-3 py-1 rounded-md transition">
+                العودة لحسابي
+            </button>
+        </form>
+    </div>
+    @endif
     <div class="min-h-screen flex">
         {{-- Sidebar --}}
         <aside class="no-print w-64 bg-slate-900 text-white flex-shrink-0 hidden lg:flex flex-col">
