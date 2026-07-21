@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>استعلام التقييم — جامعة برج العرب التكنولوجية</title>
+    <title>استعلام التقييم والإنذارات والأعذار — جامعة برج العرب التكنولوجية</title>
     @include('partials.favicon')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -11,13 +11,13 @@
     <div class="min-h-screen flex flex-col items-center justify-center p-4 py-10">
         <div class="text-center mb-8">
             <x-brand-logo size="lg" class="mx-auto mb-4" />
-            <p class="text-indigo-300 text-sm">استعلام عن التقييم والإنذارات</p>
+            <p class="text-indigo-300 text-sm">استعلام عن التقييم والإنذارات والأعذار</p>
         </div>
 
         <div class="w-full max-w-lg">
             <div class="bg-white rounded-2xl shadow-2xl p-8 mb-4">
                 <h2 class="text-xl font-bold text-slate-800 mb-2">ادخل رقم تليفونك</h2>
-                <p class="text-sm text-slate-500 mb-6">أدخل رقم التليفون المسجل في النظام لعرض تقييمك وإنذاراتك</p>
+                <p class="text-sm text-slate-500 mb-6">أدخل رقم التليفون المسجل في النظام لعرض تقييمك وإنذاراتك وأعذارك</p>
 
                 @if(!empty($notFound))
                     <div class="mb-5 px-4 py-3 rounded-lg border text-sm font-medium bg-red-50 border-red-200 text-red-800">
@@ -95,7 +95,7 @@
                     </div>
                     @endif
 
-                    <div class="grid grid-cols-2 gap-3 mt-6 pt-6 border-t border-slate-100">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-slate-100">
                         <div class="text-center p-3 bg-emerald-50 rounded-lg">
                             <p class="text-xs text-slate-500">أيام الحضور</p>
                             <p class="text-xl font-bold text-emerald-600">{{ $supervisor->presentDaysCount() }}</p>
@@ -103,6 +103,10 @@
                         <div class="text-center p-3 bg-red-50 rounded-lg">
                             <p class="text-xs text-slate-500">أيام الغياب</p>
                             <p class="text-xl font-bold text-red-600">{{ $supervisor->absentDaysCount() }}</p>
+                        </div>
+                        <div class="text-center p-3 bg-blue-50 rounded-lg col-span-2 sm:col-span-1">
+                            <p class="text-xs text-slate-500">غياب بعذر</p>
+                            <p class="text-xl font-bold text-blue-600">{{ $supervisor->excusedDaysCount() }}</p>
                         </div>
                     </div>
 
@@ -147,6 +151,58 @@
                         @else
                         <div class="text-center py-4 bg-emerald-50 border border-emerald-200 rounded-xl">
                             <p class="text-sm text-emerald-700 font-medium">لا توجد إنذارات مسجلة ✓</p>
+                        </div>
+                        @endif
+                    </div>
+
+                    {{-- Excuses --}}
+                    <div class="mt-6 pt-6 border-t border-slate-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-slate-900">الأعذار</h4>
+                            @if($excusedRecords->isNotEmpty())
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                                {{ $excusedRecords->count() }} يوم
+                            </span>
+                            @endif
+                        </div>
+
+                        @if($excusedRecords->isNotEmpty())
+                        <div class="space-y-3 max-h-72 overflow-y-auto">
+                            @foreach($excusedRecords as $record)
+                            <div class="border border-blue-200 bg-blue-50/40 rounded-xl p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                                        غياب بعذر
+                                    </span>
+                                    <span class="text-xs text-slate-500">{{ $record->session->date->format('Y-m-d') }}</span>
+                                </div>
+                                @if($record->excuse_reason)
+                                <p class="text-sm text-slate-700">{{ $record->excuse_reason }}</p>
+                                @else
+                                <p class="text-sm text-slate-400">بدون سبب مسجل</p>
+                                @endif
+                                @if($record->excuse_attachment)
+                                @php $ext = pathinfo($record->excuse_attachment, PATHINFO_EXTENSION); @endphp
+                                <div class="mt-3">
+                                    @if(in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'gif', 'webp']))
+                                    <a href="{{ $record->attachmentUrl() }}" target="_blank" rel="noopener">
+                                        <img src="{{ $record->attachmentUrl() }}" alt="مرفق العذر" class="rounded-lg max-h-36 object-cover w-full border border-blue-200">
+                                    </a>
+                                    @else
+                                    <a href="{{ $record->attachmentUrl() }}" target="_blank" rel="noopener"
+                                       class="inline-flex items-center gap-2 text-indigo-600 text-sm font-medium hover:text-indigo-800">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                        عرض مرفق العذر
+                                    </a>
+                                    @endif
+                                </div>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                        @else
+                        <div class="text-center py-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <p class="text-sm text-slate-500 font-medium">لا توجد أعذار مسجلة</p>
                         </div>
                         @endif
                     </div>

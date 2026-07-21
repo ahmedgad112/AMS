@@ -34,10 +34,18 @@ class PublicSupervisorEvaluationController extends Controller
             'warnings' => fn ($q) => $q->latest(),
         ]);
 
+        $excusedRecords = $supervisor->attendanceRecords()
+            ->where('status', 'excused')
+            ->with('session')
+            ->get()
+            ->sortByDesc(fn ($record) => $record->session->date)
+            ->values();
+
         return view('public.evaluation', [
             'supervisor' => $supervisor,
             'phone' => $request->input('phone'),
             'latestEvaluation' => $supervisor->evaluations->first(),
+            'excusedRecords' => $excusedRecords,
         ]);
     }
 }
