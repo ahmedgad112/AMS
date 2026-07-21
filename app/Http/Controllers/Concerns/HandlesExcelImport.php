@@ -6,11 +6,12 @@ use App\Http\Requests\ImportExcelRequest;
 use App\Imports\RawSheetImport;
 use App\Support\ImportResult;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 
 trait HandlesExcelImport
 {
-    protected function readExcelRows(ImportExcelRequest $request): \Illuminate\Support\Collection
+    protected function readExcelRows(ImportExcelRequest $request): Collection
     {
         $sheet = Excel::toArray(new RawSheetImport, $request->file('file'));
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Exports\AttendanceRecordsExport;
 use App\Exports\EvaluationsExport;
 use App\Exports\SupervisorDetailExport;
@@ -17,8 +18,12 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReportController extends Controller
 {
+    use AuthorizesPermissions;
+
     public function index(Request $request): View
     {
+        $this->authorizePermission('view-reports');
+
         $user = auth()->user();
         $classes = ClassAuthorization::scopeAccessibleClasses(SchoolClass::query(), $user)
             ->orderBy('name')
@@ -101,7 +106,7 @@ class ReportController extends Controller
     {
         $this->validateFilters($request);
 
-        if (! auth()->user()->can('manage-evaluations')) {
+        if (! auth()->user()->can('export-reports')) {
             abort(403);
         }
 

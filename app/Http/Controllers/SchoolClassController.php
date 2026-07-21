@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\SchoolClassesTemplateExport;
+use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Controllers\Concerns\HandlesExcelImport;
 use App\Http\Requests\ImportExcelRequest;
 use App\Http\Requests\StoreSchoolClassRequest;
@@ -19,9 +20,12 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SchoolClassController extends Controller
 {
-    use HandlesExcelImport;
+    use AuthorizesPermissions, HandlesExcelImport;
+
     public function index(): View
     {
+        $this->authorizePermission('view-classes');
+
         $user = auth()->user();
 
         $classes = ClassAuthorization::scopeAccessibleClasses(
@@ -34,13 +38,17 @@ class SchoolClassController extends Controller
 
     public function create(): View
     {
-        $inspectors = User::permission('manage-attendance')->orderBy('name')->get();
+        $this->authorizePermission('create-classes');
+
+        $inspectors = User::permission('view-attendance')->orderBy('name')->get();
 
         return view('school-classes.create', compact('inspectors'));
     }
 
     public function store(StoreSchoolClassRequest $request): RedirectResponse
     {
+        $this->authorizePermission('create-classes');
+
         DB::transaction(function () use ($request) {
             $class = SchoolClass::create($request->safe()->only(['name', 'code', 'location']));
 
@@ -55,16 +63,20 @@ class SchoolClassController extends Controller
 
     public function edit(SchoolClass $schoolClass): View
     {
+        $this->authorizePermission('edit-classes');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $schoolClass);
 
         $schoolClass->load('inspectors');
-        $inspectors = User::permission('manage-attendance')->orderBy('name')->get();
+        $inspectors = User::permission('view-attendance')->orderBy('name')->get();
 
         return view('school-classes.edit', compact('schoolClass', 'inspectors'));
     }
 
     public function update(UpdateSchoolClassRequest $request, SchoolClass $schoolClass): RedirectResponse
     {
+        $this->authorizePermission('edit-classes');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $schoolClass);
 
         DB::transaction(function () use ($request, $schoolClass) {
@@ -97,11 +109,14 @@ class SchoolClassController extends Controller
 
     public function importTemplate(): BinaryFileResponse
     {
+        $this->authorizePermission('import-classes');
+
         return Excel::download(new SchoolClassesTemplateExport, 'template-fasl.xlsx');
     }
 
     public function import(ImportExcelRequest $request, SchoolClassImportService $importService): RedirectResponse
     {
+        $this->authorizePermission('import-classes');
         $result = $importService->import($this->readExcelRows($request));
 
         return $this->redirectWithImportResult($result, 'school-classes.index', 'فصل');

@@ -30,7 +30,7 @@
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
     <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
         <h2 class="font-bold text-slate-900">آخر جلسات الحضور</h2>
-        @can('manage-attendance')
+        @can('view-attendance')
         <a href="{{ route('attendance.index') }}" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">عرض الكل</a>
         @endcan
     </div>
@@ -53,7 +53,9 @@
                     <td class="px-6 py-3">{{ $session->createdBy->name }}</td>
                     <td class="px-6 py-3"><x-status-badge :status="$session->status" /></td>
                     <td class="px-6 py-3">
+                        @can('view-attendance')
                         <a href="{{ route('attendance.sessions.show', $session) }}" class="text-indigo-600 hover:text-indigo-800">عرض</a>
+                        @endcan
                     </td>
                 </tr>
                 @empty

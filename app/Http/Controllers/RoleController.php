@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Support\PermissionCatalog;
@@ -12,8 +13,12 @@ use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    use AuthorizesPermissions;
+
     public function index(): View
     {
+        $this->authorizePermission('view-roles');
+
         $roles = Role::query()
             ->with('permissions')
             ->withCount(['permissions', 'users'])
@@ -25,6 +30,8 @@ class RoleController extends Controller
 
     public function create(): View
     {
+        $this->authorizePermission('create-roles');
+
         return view('roles.create', [
             'permissionGroups' => PermissionCatalog::groups(),
         ]);
@@ -32,6 +39,8 @@ class RoleController extends Controller
 
     public function store(StoreRoleRequest $request): RedirectResponse
     {
+        $this->authorizePermission('create-roles');
+
         DB::transaction(function () use ($request) {
             $role = Role::create([
                 'name' => $request->input('name'),
@@ -47,6 +56,8 @@ class RoleController extends Controller
 
     public function edit(Role $role): View
     {
+        $this->authorizePermission('edit-roles');
+
         $role->load('permissions');
 
         return view('roles.edit', [
@@ -59,6 +70,8 @@ class RoleController extends Controller
 
     public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
     {
+        $this->authorizePermission('edit-roles');
+
         DB::transaction(function () use ($request, $role) {
             if (! PermissionCatalog::isProtectedRole($role->name)) {
                 $role->update(['name' => $request->input('name')]);
@@ -73,6 +86,8 @@ class RoleController extends Controller
 
     public function destroy(Role $role): RedirectResponse
     {
+        $this->authorizePermission('delete-roles');
+
         if (PermissionCatalog::isProtectedRole($role->name)) {
             return back()->with('error', 'لا يمكن حذف هذا الدور المحمي.');
         }

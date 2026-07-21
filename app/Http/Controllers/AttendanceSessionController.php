@@ -2,24 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Requests\StoreAttendanceRecordsRequest;
 use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
-use App\Support\ClassAuthorization;
 use App\Services\AttendanceService;
+use App\Support\ClassAuthorization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AttendanceSessionController extends Controller
 {
+    use AuthorizesPermissions;
+
     public function __construct(
         protected AttendanceService $attendanceService
     ) {}
 
     public function index(Request $request): View
     {
+        $this->authorizePermission('view-attendance');
+
         $user = auth()->user();
 
         $classes = ClassAuthorization::scopeAccessibleClasses(SchoolClass::query(), $user)
@@ -39,6 +44,8 @@ class AttendanceSessionController extends Controller
 
     public function create(Request $request): RedirectResponse|View
     {
+        $this->authorizePermission('create-attendance-sessions');
+
         $request->validate([
             'school_class_id' => ['required', 'integer', 'exists:school_classes,id'],
             'date' => ['nullable', 'date'],
@@ -62,6 +69,8 @@ class AttendanceSessionController extends Controller
 
     public function show(AttendanceSession $session): View
     {
+        $this->authorizePermission('view-attendance');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $session->school_class_id);
 
         $session->load(['schoolClass', 'records.supervisor']);
@@ -78,6 +87,8 @@ class AttendanceSessionController extends Controller
 
     public function storeRecords(StoreAttendanceRecordsRequest $request, AttendanceSession $session): RedirectResponse
     {
+        $this->authorizePermission('save-attendance-records');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $session->school_class_id);
 
         if ($session->isClosed()) {
@@ -108,6 +119,8 @@ class AttendanceSessionController extends Controller
 
     public function close(AttendanceSession $session): RedirectResponse
     {
+        $this->authorizePermission('close-attendance-sessions');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $session->school_class_id);
 
         try {
@@ -121,9 +134,7 @@ class AttendanceSessionController extends Controller
 
     public function reopen(AttendanceSession $session): RedirectResponse
     {
-        if (! auth()->user()->can('reopen-sessions')) {
-            abort(403);
-        }
+        $this->authorizePermission('reopen-sessions');
 
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $session->school_class_id);
 
@@ -134,6 +145,8 @@ class AttendanceSessionController extends Controller
 
     public function destroy(AttendanceSession $session): RedirectResponse
     {
+        $this->authorizePermission('delete-attendance-sessions');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $session->school_class_id);
 
         try {
@@ -148,6 +161,8 @@ class AttendanceSessionController extends Controller
 
     public function destroyRecord(AttendanceSession $session, AttendanceRecord $record): RedirectResponse
     {
+        $this->authorizePermission('delete-attendance-records');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $session->school_class_id);
 
         try {

@@ -9,7 +9,7 @@ class UpdateSchoolClassRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-classes') ?? false;
+        return $this->user()?->can('edit-classes') ?? false;
     }
 
     public function rules(): array

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\SchoolClass;
@@ -14,8 +15,12 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    use AuthorizesPermissions;
+
     public function index(): View
     {
+        $this->authorizePermission('view-users');
+
         $users = User::with('roles', 'schoolClasses')
             ->latest()
             ->paginate(15);
@@ -25,11 +30,14 @@ class UserController extends Controller
 
     public function create(): View
     {
+        $this->authorizePermission('create-users');
+
         return view('users.create', $this->formData());
     }
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        $this->authorizePermission('create-users');
         DB::transaction(function () use ($request) {
             $user = User::create([
                 'name' => $request->input('name'),
@@ -48,6 +56,8 @@ class UserController extends Controller
 
     public function edit(User $user): View
     {
+        $this->authorizePermission('edit-users');
+
         $user->load('roles', 'schoolClasses');
 
         return view('users.edit', array_merge(['user' => $user], $this->formData()));
@@ -55,6 +65,7 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        $this->authorizePermission('edit-users');
         DB::transaction(function () use ($request, $user) {
             $data = [
                 'name' => $request->input('name'),
@@ -77,6 +88,8 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        $this->authorizePermission('delete-users');
+
         if ($user->id === auth()->id()) {
             return back()->with('error', 'لا يمكنك حذف حسابك.');
         }

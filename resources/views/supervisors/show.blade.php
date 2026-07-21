@@ -16,21 +16,25 @@
             تصدير Excel
         </a>
         @endcan
+        @can('print-supervisors')
         <a href="{{ route('supervisors.print', $supervisor) }}" target="_blank"
            class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             طباعة / PDF
         </a>
+        @endcan
+        @can('edit-supervisors')
         <a href="{{ route('supervisors.edit', $supervisor) }}"
            class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             تعديل
         </a>
-        @can('manage-warnings')
+        @endcan
+        @can('create-warnings')
         <button type="button" @click="warningOpen = true"
                 class="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             + إنذار / مخالفة
         </button>
         @endcan
-        @can('manage-supervisors')
+        @can('delete-supervisors')
         <form action="{{ route('supervisors.destroy', $supervisor) }}" method="POST" class="inline"
               onsubmit="return confirm('هل أنت متأكد من حذف هذا المشرف؟ سيتم حذف سجل حضوره وإنذاراته.')">
             @csrf @method('DELETE')
@@ -76,6 +80,7 @@
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
     {{-- Left column --}}
     <div class="xl:col-span-2 space-y-6">
+        @can('view-warnings')
         {{-- Warnings history --}}
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
             <div class="px-6 py-4 border-b border-slate-200">
@@ -116,6 +121,7 @@
                 </table>
             </div>
         </div>
+        @endcan
 
         {{-- Excuse attachments gallery --}}
         @if($excusedRecords->isNotEmpty())
@@ -187,7 +193,7 @@
             </dl>
         </div>
 
-        @can('manage-evaluations')
+        @can('create-evaluations')
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <h2 class="font-bold text-slate-900 mb-4">التقييم النهائي</h2>
             <form method="POST" action="{{ route('supervisors.evaluations.store', $supervisor) }}" class="space-y-4">
@@ -207,6 +213,7 @@
         </div>
         @endcan
 
+        @can('view-evaluations')
         @if($supervisor->evaluations->isNotEmpty())
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <h2 class="font-bold text-slate-900 mb-4">التقييمات السابقة</h2>
@@ -226,11 +233,12 @@
             </div>
         </div>
         @endif
+        @endcan
     </div>
 </div>
 
 {{-- Warning Modal --}}
-@can('manage-warnings')
+@can('create-warnings')
 <div x-show="warningOpen"
      x-cloak
      class="fixed inset-0 z-50 flex items-center justify-center p-4"

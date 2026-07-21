@@ -8,10 +8,12 @@
         <h1 class="text-2xl font-bold text-slate-900">المستخدمين</h1>
         <p class="text-slate-500 text-sm mt-1">إدارة حسابات النظام والأدوار</p>
     </div>
+    @can('create-users')
     <a href="{{ route('users.create') }}"
        class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
         + إضافة مستخدم
     </a>
+    @endcan
 </div>
 
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -38,6 +40,7 @@
                     </td>
                     <td class="px-6 py-3">{{ $user->schoolClasses->pluck('name')->join('، ') ?: '—' }}</td>
                     <td class="px-6 py-3">
+                        @can('impersonate-users')
                         @if($user->id !== auth()->id() && !($isImpersonating ?? false))
                         <form action="{{ route('users.impersonate', $user) }}" method="POST" class="inline ml-3"
                               onsubmit="return confirm('الدخول بحساب {{ $user->name }}؟')">
@@ -45,7 +48,11 @@
                             <button type="submit" class="text-emerald-600 hover:text-emerald-800">دخول كـ</button>
                         </form>
                         @endif
+                        @endcan
+                        @can('edit-users')
                         <a href="{{ route('users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-800">تعديل</a>
+                        @endcan
+                        @can('delete-users')
                         @if($user->id !== auth()->id())
                         <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline mr-3"
                               onsubmit="return confirm('هل أنت متأكد؟')">
@@ -53,6 +60,7 @@
                             <button type="submit" class="text-red-600 hover:text-red-800">حذف</button>
                         </form>
                         @endif
+                        @endcan
                     </td>
                 </tr>
                 @empty

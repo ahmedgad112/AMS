@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\SupervisorsTemplateExport;
+use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Controllers\Concerns\HandlesExcelImport;
 use App\Http\Requests\ImportExcelRequest;
 use App\Http\Requests\StoreSupervisorRequest;
@@ -19,9 +20,12 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SupervisorController extends Controller
 {
-    use HandlesExcelImport;
+    use AuthorizesPermissions, HandlesExcelImport;
+
     public function index(Request $request): View
     {
+        $this->authorizePermission('view-supervisors');
+
         $user = auth()->user();
         $filters = $request->only(['search', 'school_class_id', 'status', 'warnings']);
 
@@ -52,6 +56,8 @@ class SupervisorController extends Controller
 
     public function create(): View
     {
+        $this->authorizePermission('create-supervisors');
+
         $user = auth()->user();
         $classes = ClassAuthorization::scopeAccessibleClasses(SchoolClass::query(), $user)
             ->orderBy('name')
@@ -62,6 +68,8 @@ class SupervisorController extends Controller
 
     public function store(StoreSupervisorRequest $request): RedirectResponse
     {
+        $this->authorizePermission('create-supervisors');
+
         Supervisor::create($request->validated());
 
         return redirect()->route('supervisors.index')
@@ -70,6 +78,8 @@ class SupervisorController extends Controller
 
     public function show(Supervisor $supervisor): View
     {
+        $this->authorizePermission('view-supervisors');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $supervisor->school_class_id);
 
         $supervisor->load([
@@ -91,6 +101,8 @@ class SupervisorController extends Controller
 
     public function print(Supervisor $supervisor): View
     {
+        $this->authorizePermission('print-supervisors');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $supervisor->school_class_id);
 
         $supervisor->load([
@@ -105,6 +117,8 @@ class SupervisorController extends Controller
 
     public function edit(Supervisor $supervisor): View
     {
+        $this->authorizePermission('edit-supervisors');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $supervisor->school_class_id);
 
         $user = auth()->user();
@@ -117,6 +131,8 @@ class SupervisorController extends Controller
 
     public function update(UpdateSupervisorRequest $request, Supervisor $supervisor): RedirectResponse
     {
+        $this->authorizePermission('edit-supervisors');
+
         $data = $request->validated();
 
         if (! auth()->user()->can('edit-supervisor-deductions')) {
@@ -131,6 +147,8 @@ class SupervisorController extends Controller
 
     public function destroy(Supervisor $supervisor): RedirectResponse
     {
+        $this->authorizePermission('delete-supervisors');
+
         ClassAuthorization::abortUnlessCanAccess(auth()->user(), $supervisor->school_class_id);
 
         $supervisor->delete();
@@ -141,11 +159,14 @@ class SupervisorController extends Controller
 
     public function importTemplate(): BinaryFileResponse
     {
+        $this->authorizePermission('import-supervisors');
+
         return Excel::download(new SupervisorsTemplateExport, 'template-mushref.xlsx');
     }
 
     public function import(ImportExcelRequest $request): RedirectResponse
     {
+        $this->authorizePermission('import-supervisors');
         $importService = new SupervisorImportService(auth()->user());
         $result = $importService->import($this->readExcelRows($request));
 

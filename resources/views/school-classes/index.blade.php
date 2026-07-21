@@ -8,8 +8,8 @@
         <h1 class="text-2xl font-bold text-slate-900">الفصول والورش</h1>
         <p class="text-slate-500 text-sm mt-1">إدارة الفصول وإسناد المفتشين</p>
     </div>
-    @can('manage-classes')
     <div class="flex gap-2">
+        @can('import-classes')
         <x-excel-import
             modal-id="import-classes"
             title="استيراد الفصول من Excel"
@@ -17,12 +17,14 @@
             :template-route="route('school-classes.import.template')"
             :import-route="route('school-classes.import')"
         />
+        @endcan
+        @can('create-classes')
         <a href="{{ route('school-classes.create') }}"
            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             + إضافة فصل
         </a>
+        @endcan
     </div>
-    @endcan
 </div>
 
 @if(session('import_errors'))
@@ -58,7 +60,9 @@
                     <td class="px-6 py-3">{{ $class->supervisors_count }}</td>
                     <td class="px-6 py-3">{{ $class->inspectors_count }}</td>
                     <td class="px-6 py-3 space-x-reverse space-x-2">
+                        @can('edit-classes')
                         <a href="{{ route('school-classes.edit', $class) }}" class="text-indigo-600 hover:text-indigo-800">تعديل</a>
+                        @endcan
                         @can('delete-classes')
                         <form action="{{ route('school-classes.destroy', $class) }}" method="POST" class="inline"
                               onsubmit="return confirm('هل أنت متأكد من الحذف؟')">

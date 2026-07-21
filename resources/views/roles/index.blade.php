@@ -8,10 +8,12 @@
         <h1 class="text-2xl font-bold text-slate-900">الأدوار والصلاحيات</h1>
         <p class="text-slate-500 text-sm mt-1">تحكم كامل في صلاحيات كل دور بالنظام</p>
     </div>
+    @can('create-roles')
     <a href="{{ route('roles.create') }}"
        class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
         + دور جديد
     </a>
+    @endcan
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -38,7 +40,10 @@
         </div>
 
         <div class="flex gap-3 pt-2 border-t border-slate-100">
+            @can('edit-roles')
             <a href="{{ route('roles.edit', $role) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">تعديل الصلاحيات</a>
+            @endcan
+            @can('delete-roles')
             @if(! \App\Support\PermissionCatalog::isProtectedRole($role->name) && $role->users_count === 0)
             <form action="{{ route('roles.destroy', $role) }}" method="POST" class="inline"
                   onsubmit="return confirm('هل أنت متأكد من حذف هذا الدور؟')">
@@ -46,6 +51,7 @@
                 <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">حذف</button>
             </form>
             @endif
+            @endcan
         </div>
     </div>
     @endforeach

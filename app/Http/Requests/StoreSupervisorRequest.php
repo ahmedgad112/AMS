@@ -10,7 +10,7 @@ class StoreSupervisorRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        if (! $this->user()?->can('manage-supervisors')) {
+        if (! $this->user()?->can('create-supervisors')) {
             return false;
         }
 

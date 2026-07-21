@@ -15,6 +15,7 @@
             تصدير Excel
         </a>
         @endcan
+        @can('import-supervisors')
         <x-excel-import
             modal-id="import-supervisors"
             title="استيراد المشرفين من Excel"
@@ -22,10 +23,13 @@
             :template-route="route('supervisors.import.template')"
             :import-route="route('supervisors.import')"
         />
+        @endcan
+        @can('create-supervisors')
         <a href="{{ route('supervisors.create') }}"
            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition">
             + إضافة مشرف
         </a>
+        @endcan
     </div>
 </div>
 
@@ -127,8 +131,10 @@
                     </td>
                     <td class="px-6 py-3"><x-status-badge :status="$supervisor->status" /></td>
                     <td class="px-6 py-3">
+                        @can('view-supervisors')
                         <a href="{{ route('supervisors.show', $supervisor) }}" class="text-indigo-600 hover:text-indigo-800">كارت المشرف</a>
-                        @can('manage-supervisors')
+                        @endcan
+                        @can('delete-supervisors')
                         <form action="{{ route('supervisors.destroy', $supervisor) }}" method="POST" class="inline mr-3"
                               onsubmit="return confirm('هل أنت متأكد من حذف {{ $supervisor->name }}؟')">
                             @csrf @method('DELETE')

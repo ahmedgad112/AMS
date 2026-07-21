@@ -8,7 +8,7 @@ class StoreEvaluationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-evaluations') ?? false;
+        return $this->user()?->can('create-evaluations') ?? false;
     }
 
     public function rules(): array

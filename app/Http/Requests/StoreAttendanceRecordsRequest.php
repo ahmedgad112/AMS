@@ -9,7 +9,7 @@ class StoreAttendanceRecordsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-attendance') ?? false;
+        return $this->user()?->can('save-attendance-records') ?? false;
     }
 
     public function rules(): array

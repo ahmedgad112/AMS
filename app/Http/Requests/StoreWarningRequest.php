@@ -8,7 +8,7 @@ class StoreWarningRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-warnings') ?? false;
+        return $this->user()?->can('create-warnings') ?? false;
     }
 
     public function rules(): array

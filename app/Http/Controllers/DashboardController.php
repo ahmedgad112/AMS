@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AttendanceSession;
 use App\Models\SchoolClass;
 use App\Models\Supervisor;
+use App\Models\Warning;
 use App\Support\ClassAuthorization;
 use Illuminate\View\View;
 
@@ -26,7 +27,7 @@ class DashboardController extends Controller
                 ->where('status', 'open')
                 ->when(! $user->canAccessAllClasses(), fn ($q) => $q->whereIn('school_class_id', $user->assignedClassIds()))
                 ->count(),
-            'warnings_this_month' => \App\Models\Warning::query()
+            'warnings_this_month' => Warning::query()
                 ->when(! $user->canAccessAllClasses(), function ($q) use ($user) {
                     $q->whereHas('supervisor', fn ($sq) => $sq->whereIn('school_class_id', $user->assignedClassIds()));
                 })

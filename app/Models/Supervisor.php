@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PhoneNormalizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -84,7 +85,7 @@ class Supervisor extends Model
 
     public static function findByPhone(string $input): ?self
     {
-        $normalized = \App\Support\PhoneNormalizer::normalize($input);
+        $normalized = PhoneNormalizer::normalize($input);
 
         if ($normalized === '') {
             return null;
@@ -106,6 +107,6 @@ class Supervisor extends Model
         return static::query()
             ->whereNotNull('phone')
             ->get()
-            ->first(fn (self $s) => \App\Support\PhoneNormalizer::normalize($s->phone) === $normalized);
+            ->first(fn (self $s) => PhoneNormalizer::normalize($s->phone) === $normalized);
     }
 }

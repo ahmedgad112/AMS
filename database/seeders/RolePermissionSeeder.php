@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Services\PermissionSyncService;
+use App\Support\PermissionCatalog;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 
@@ -15,12 +16,21 @@ class RolePermissionSeeder extends Seeder
         $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
         $inspector = Role::firstOrCreate(['name' => 'inspector', 'guard_name' => 'web']);
 
-        $superAdmin->syncPermissions(\App\Support\PermissionCatalog::allNames());
+        $superAdmin->syncPermissions(PermissionCatalog::allNames());
 
         $inspector->syncPermissions([
-            'manage-supervisors',
-            'manage-attendance',
-            'manage-warnings',
+            'view-supervisors',
+            'create-supervisors',
+            'edit-supervisors',
+            'import-supervisors',
+            'print-supervisors',
+            'view-attendance',
+            'create-attendance-sessions',
+            'save-attendance-records',
+            'close-attendance-sessions',
+            'view-warnings',
+            'create-warnings',
+            'view-reports',
             'export-reports',
         ]);
     }

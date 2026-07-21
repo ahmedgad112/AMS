@@ -10,7 +10,7 @@ class UpdateSupervisorRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        if (! $this->user()?->can('manage-supervisors')) {
+        if (! $this->user()?->can('edit-supervisors')) {
             return false;
         }
 

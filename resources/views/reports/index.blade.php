@@ -39,6 +39,7 @@
 
 {{-- Report cards --}}
 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    @can('export-reports')
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div class="flex items-start gap-4">
             <div class="bg-emerald-100 text-emerald-700 rounded-lg p-3">
@@ -89,8 +90,9 @@
             </div>
         </div>
     </div>
+    @endcan
 
-    @can('manage-evaluations')
+    @can('export-reports')
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div class="flex items-start gap-4">
             <div class="bg-purple-100 text-purple-700 rounded-lg p-3">

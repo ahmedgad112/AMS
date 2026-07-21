@@ -42,4 +42,17 @@ class PermissionCatalog
     {
         return in_array($roleName, self::protectedRoles(), true);
     }
+
+    public static function impliedBy(string $permission): array
+    {
+        $parents = [];
+
+        foreach (config('permissions.implies', []) as $parent => $children) {
+            if (in_array($permission, $children, true)) {
+                $parents[] = $parent;
+            }
+        }
+
+        return $parents;
+    }
 }

@@ -17,6 +17,7 @@
 </div>
 
 {{-- Open new session --}}
+@can('create-attendance-sessions')
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
     <h2 class="font-bold text-slate-900 mb-4">فتح جلسة جديدة</h2>
     <form method="POST" action="{{ route('attendance.sessions.create') }}" class="flex flex-wrap gap-4 items-end">
@@ -43,6 +44,7 @@
         </button>
     </form>
 </div>
+@endcan
 
 {{-- Sessions list --}}
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -79,10 +81,12 @@
                     <td class="px-6 py-3">{{ $session->createdBy->name }}</td>
                     <td class="px-6 py-3"><x-status-badge :status="$session->status" /></td>
                     <td class="px-6 py-3">
+                        @can('view-attendance')
                         <a href="{{ route('attendance.sessions.show', $session) }}" class="text-indigo-600 hover:text-indigo-800 font-medium">
                             {{ $session->isOpen() ? 'تسجيل الحضور' : 'عرض' }}
                         </a>
-                        @can('manage-attendance')
+                        @endcan
+                        @can('delete-attendance-sessions')
                         <form action="{{ route('attendance.sessions.destroy', $session) }}" method="POST" class="inline mr-3"
                               onsubmit="return confirm('هل أنت متأكد من حذف جلسة {{ $session->date->format('Y-m-d') }}؟ سيتم حذف كل سجلات الحضور.')">
                             @csrf @method('DELETE')

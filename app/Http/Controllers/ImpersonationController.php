@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Models\User;
 use App\Services\ImpersonationService;
 use Illuminate\Http\RedirectResponse;
@@ -9,8 +10,12 @@ use Illuminate\Http\Request;
 
 class ImpersonationController extends Controller
 {
+    use AuthorizesPermissions;
+
     public function store(Request $request, User $user, ImpersonationService $impersonation): RedirectResponse
     {
+        $this->authorizePermission('impersonate-users');
+
         $admin = $request->user();
 
         if ($impersonation->isImpersonating()) {

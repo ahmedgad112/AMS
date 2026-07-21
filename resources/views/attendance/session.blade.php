@@ -13,6 +13,7 @@
     </div>
     <div class="flex flex-wrap gap-2">
         @if($session->isOpen())
+        @can('close-attendance-sessions')
         <form method="POST" action="{{ route('attendance.sessions.close', $session) }}"
               onsubmit="return confirm('هل أنت متأكد من إغلاق الجلسة؟ لن يمكن التعديل بعد الإغلاق.')">
             @csrf
@@ -20,6 +21,7 @@
                 إغلاق الجلسة
             </button>
         </form>
+        @endcan
         @elseif(auth()->user()->can('reopen-sessions'))
         <form method="POST" action="{{ route('attendance.sessions.reopen', $session) }}">
             @csrf
@@ -28,7 +30,7 @@
             </button>
         </form>
         @endif
-        @can('manage-attendance')
+        @can('delete-attendance-sessions')
         <form method="POST" action="{{ route('attendance.sessions.destroy', $session) }}"
               onsubmit="return confirm('هل أنت متأكد من حذف هذه الجلسة بالكامل؟')">
             @csrf @method('DELETE')
@@ -72,6 +74,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
+                @php $canSaveRecords = auth()->user()->can('save-attendance-records'); @endphp
                 @foreach($supervisors as $index => $supervisor)
                 @php
                     $existing = $recordsBySupervisor->get($supervisor->id);
@@ -97,11 +100,11 @@
                             <label class="cursor-pointer">
                                 <input type="radio" name="records[{{ $index }}][status]" value="{{ $value }}"
                                        x-model="status"
-                                       {{ $session->isClosed() ? 'disabled' : '' }}
+                                       {{ ($session->isClosed() || ! $canSaveRecords) ? 'disabled' : '' }}
                                        class="peer sr-only">
                                 <span class="inline-block px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold transition
                                     peer-checked:text-white {{ $colors[$value] }}
-                                    {{ $session->isClosed() ? 'opacity-60 cursor-not-allowed' : 'hover:border-slate-400' }}">
+                                    {{ ($session->isClosed() || ! $canSaveRecords) ? 'opacity-60 cursor-not-allowed' : 'hover:border-slate-400' }}">
                                     {{ $label }}
                                 </span>
                             </label>
@@ -116,7 +119,7 @@
                             <div>
                                 <label class="block text-xs font-medium text-slate-600 mb-1">سبب العذر</label>
                                 <textarea name="records[{{ $index }}][excuse_reason]" rows="2"
-                                          {{ $session->isClosed() ? 'disabled' : '' }}
+                                          {{ ($session->isClosed() || ! $canSaveRecords) ? 'disabled' : '' }}
                                           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">{{ old("records.{$index}.excuse_reason", $existing?->excuse_reason) }}</textarea>
                                 @error("records.{$index}.excuse_reason")
                                 <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
@@ -132,7 +135,7 @@
                                 @endif
                                 <input type="file" name="records[{{ $index }}][excuse_attachment]"
                                        accept=".jpg,.jpeg,.png,.pdf"
-                                       {{ $session->isClosed() ? 'disabled' : '' }}
+                                       {{ ($session->isClosed() || ! $canSaveRecords) ? 'disabled' : '' }}
                                        class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                                 @error("records.{$index}.excuse_attachment")
                                 <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
@@ -144,11 +147,13 @@
                     @if($session->isOpen())
                     <td class="px-6 py-4 align-top">
                         @if($existing)
+                        @can('delete-attendance-records')
                         <form action="{{ route('attendance.sessions.records.destroy', [$session, $existing]) }}" method="POST"
                               onsubmit="return confirm('حذف سجل حضور {{ $supervisor->name }}؟')">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">مسح</button>
                         </form>
+                        @endcan
                         @endif
                     </td>
                     @endif
@@ -159,11 +164,13 @@
     </div>
 
     @if($session->isOpen())
+    @can('save-attendance-records')
     <div class="px-6 py-4 border-t border-slate-200 bg-slate-50">
         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-6 py-2.5 rounded-lg">
             حفظ سجل الحضور
         </button>
     </div>
+    @endcan
     @endif
 </form>
 @endif
