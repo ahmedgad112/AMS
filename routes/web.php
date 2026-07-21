@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AttendanceSessionController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
@@ -32,6 +33,9 @@ Route::middleware('auth')->group(function () {
         ->name('impersonate.leave');
 
     Route::get('/', DashboardController::class)->name('dashboard');
+
+    Route::middleware('permission:view-activity-log')->get('activity-log', [ActivityLogController::class, 'index'])
+        ->name('activity-log.index');
 
     Route::middleware('permission:view-classes')->get('school-classes', [SchoolClassController::class, 'index'])
         ->name('school-classes.index');

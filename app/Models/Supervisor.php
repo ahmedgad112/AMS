@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use App\Support\PhoneNormalizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Supervisor extends Model
 {
+    use LogsActivity;
+
+    public static function activityLogLabel(): string
+    {
+        return 'مشرف';
+    }
+
+    public static function activityLogName(): string
+    {
+        return 'supervisors';
+    }
+
     protected $fillable = [
         'name',
         'phone',

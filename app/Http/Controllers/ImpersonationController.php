@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\ImpersonationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,14 @@ class ImpersonationController extends Controller
 
         $impersonation->start($admin, $user);
 
+        ActivityLogger::log(
+            "الدخول بحساب المستخدم «{$user->name}»",
+            'impersonate_start',
+            'auth',
+            $user,
+            ['impersonator_id' => $admin->id, 'impersonator_name' => $admin->name]
+        );
+
         return redirect()
             ->route('dashboard')
             ->with('success', "أنت الآن تعرض النظام كـ {$user->name}.");
@@ -40,6 +49,13 @@ class ImpersonationController extends Controller
         if (! $impersonator) {
             return redirect()->route('dashboard');
         }
+
+        ActivityLogger::log(
+            'العودة إلى الحساب الأصلي بعد المعاينة',
+            'impersonate_stop',
+            'auth',
+            $impersonator
+        );
 
         return redirect()
             ->route('users.index')

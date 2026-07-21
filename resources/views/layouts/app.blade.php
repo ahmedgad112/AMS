@@ -8,7 +8,10 @@
     @include('partials.favicon')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased"
+      x-data="{ mobileNavOpen: false }"
+      x-bind:class="mobileNavOpen ? 'overflow-hidden lg:overflow-auto' : ''"
+      @keydown.escape.window="mobileNavOpen = false">
     @if($isImpersonating ?? false)
     <div class="no-print bg-amber-500 text-amber-950 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-sm font-medium">
         <span>
@@ -25,67 +28,16 @@
         </form>
     </div>
     @endif
+
     <div class="min-h-screen flex">
-        {{-- Sidebar --}}
+        {{-- Desktop sidebar --}}
         <aside class="no-print w-64 bg-slate-900 text-white flex-shrink-0 hidden lg:flex flex-col">
             <div class="p-6 border-b border-slate-700">
                 <x-brand-logo size="md" class="mx-auto mb-3" />
                 <p class="text-slate-400 text-sm text-center">نظام إدارة الحضور والتقييم</p>
             </div>
-            <nav class="flex-1 p-4 space-y-1">
-                <a href="{{ route('dashboard') }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('dashboard') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                    الرئيسية
-                </a>
-
-                @can('view-attendance')
-                <a href="{{ route('attendance.index') }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('attendance.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                    الحضور والغياب
-                </a>
-                @endcan
-
-                @can('view-supervisors')
-                <a href="{{ route('supervisors.index') }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('supervisors.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    المشرفين
-                </a>
-                @endcan
-
-                @can('view-classes')
-                <a href="{{ route('school-classes.index') }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('school-classes.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                    الفصول والورش
-                </a>
-                @endcan
-
-                @can('view-roles')
-                <a href="{{ route('roles.index') }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('roles.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                    الأدوار والصلاحيات
-                </a>
-                @endcan
-
-                @can('view-reports')
-                <a href="{{ route('reports.index') }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('reports.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    التقارير
-                </a>
-                @endcan
-
-                @can('view-users')
-                <a href="{{ route('users.index') }}"
-                   class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('users.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    المستخدمين
-                </a>
-                @endcan
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                @include('layouts.partials.nav-links', ['mobile' => false])
             </nav>
             <div class="p-4 border-t border-slate-700">
                 <div class="text-sm text-slate-400 mb-2">{{ auth()->user()->name }}</div>
@@ -96,19 +48,75 @@
             </div>
         </aside>
 
+        {{-- Mobile drawer --}}
+        <div x-show="mobileNavOpen"
+             x-cloak
+             class="no-print lg:hidden fixed inset-0 z-50"
+             role="dialog"
+             aria-modal="true"
+             aria-label="القائمة">
+            <div class="fixed inset-0 bg-black/50 transition-opacity"
+                 x-show="mobileNavOpen"
+                 x-transition:enter="ease-out duration-200"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-150"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="mobileNavOpen = false"></div>
+
+            <aside class="fixed inset-y-0 right-0 w-[min(100vw-3rem,18rem)] bg-slate-900 text-white flex flex-col shadow-2xl"
+                   x-show="mobileNavOpen"
+                   x-transition:enter="ease-out duration-200"
+                   x-transition:enter-start="translate-x-full"
+                   x-transition:enter-end="translate-x-0"
+                   x-transition:leave="ease-in duration-150"
+                   x-transition:leave-start="translate-x-0"
+                   x-transition:leave-end="translate-x-full"
+                   @click.stop>
+                <div class="p-4 border-b border-slate-700 flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <x-brand-logo size="sm" />
+                        <p class="text-slate-400 text-xs mt-2 truncate">{{ auth()->user()->name }}</p>
+                    </div>
+                    <button type="button"
+                            @click="mobileNavOpen = false"
+                            class="shrink-0 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                            aria-label="إغلاق القائمة">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <nav class="flex-1 p-4 space-y-1 overflow-y-auto overscroll-contain">
+                    @include('layouts.partials.nav-links', ['mobile' => true])
+                </nav>
+                <div class="p-4 border-t border-slate-700">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-400 hover:text-red-300 py-2.5 rounded-lg hover:bg-slate-800 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            تسجيل الخروج
+                        </button>
+                    </form>
+                </div>
+            </aside>
+        </div>
+
         {{-- Main content --}}
         <div class="flex-1 flex flex-col min-w-0">
-            <header class="no-print bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between lg:hidden">
-                <div class="flex items-center gap-3">
+            <header class="no-print sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between gap-3 lg:hidden">
+                <button type="button"
+                        @click="mobileNavOpen = true"
+                        class="p-2 -mr-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
+                        aria-label="فتح القائمة">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2 min-w-0">
                     <x-brand-logo size="sm" />
-                </div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="text-sm text-red-600">خروج</button>
-                </form>
+                </a>
+                <div class="w-10"></div>
             </header>
 
-            <main class="flex-1 p-6 lg:p-8">
+            <main class="flex-1 p-4 sm:p-6 lg:p-8">
                 @if(session('success'))
                     <x-alert type="success" :message="session('success')" />
                 @endif

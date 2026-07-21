@@ -2,12 +2,33 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AttendanceSession extends Model
 {
+    use LogsActivity;
+
+    public static function activityLogLabel(): string
+    {
+        return 'جلسة حضور';
+    }
+
+    public static function activityLogName(): string
+    {
+        return 'attendance';
+    }
+
+    protected function activityLogSubjectLabel(): string
+    {
+        $date = $this->date?->format('Y-m-d') ?? '—';
+        $class = $this->schoolClass?->name ?? '—';
+
+        return static::activityLogLabel()." {$date} — {$class}";
+    }
+
     protected $fillable = [
         'date',
         'school_class_id',

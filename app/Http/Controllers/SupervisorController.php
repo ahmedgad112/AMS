@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\SupervisorsTemplateExport;
 use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Controllers\Concerns\HandlesExcelImport;
+use App\Services\ActivityLogger;
 use App\Http\Requests\ImportExcelRequest;
 use App\Http\Requests\StoreSupervisorRequest;
 use App\Http\Requests\UpdateSupervisorRequest;
@@ -111,6 +112,13 @@ class SupervisorController extends Controller
             'evaluations.evaluatedBy',
             'attendanceRecords.session',
         ]);
+
+        ActivityLogger::log(
+            "طباعة كارت المشرف «{$supervisor->name}»",
+            'print',
+            'supervisors',
+            $supervisor
+        );
 
         return view('supervisors.print', compact('supervisor'));
     }

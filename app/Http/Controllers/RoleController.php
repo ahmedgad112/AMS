@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
+use App\Services\ActivityLogger;
 use App\Support\PermissionCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +48,16 @@ class RoleController extends Controller
                 'guard_name' => 'web',
             ]);
 
-            $role->syncPermissions($request->input('permissions', []));
+            $permissions = $request->input('permissions', []);
+            $role->syncPermissions($permissions);
+
+            ActivityLogger::log(
+                "تم إنشاء دور «{$role->name}»",
+                'created',
+                'roles',
+                null,
+                ['role' => $role->name, 'permissions' => $permissions]
+            );
         });
 
         return redirect()->route('roles.index')
@@ -73,11 +83,26 @@ class RoleController extends Controller
         $this->authorizePermission('edit-roles');
 
         DB::transaction(function () use ($request, $role) {
+            $oldPermissions = $role->permissions->pluck('name')->all();
+
             if (! PermissionCatalog::isProtectedRole($role->name)) {
                 $role->update(['name' => $request->input('name')]);
             }
 
-            $role->syncPermissions($request->input('permissions', []));
+            $permissions = $request->input('permissions', []);
+            $role->syncPermissions($permissions);
+
+            ActivityLogger::log(
+                "تم تعديل دور «{$role->name}»",
+                'updated',
+                'roles',
+                null,
+                [
+                    'role' => $role->name,
+                    'permissions' => $permissions,
+                    'old_permissions' => $oldPermissions,
+                ]
+            );
         });
 
         return redirect()->route('roles.index')
@@ -96,7 +121,16 @@ class RoleController extends Controller
             return back()->with('error', 'لا يمكن حذف دور مرتبط بمستخدمين.');
         }
 
+        $roleName = $role->name;
         $role->delete();
+
+        ActivityLogger::log(
+            "تم حذف دور «{$roleName}»",
+            'deleted',
+            'roles',
+            null,
+            ['role' => $roleName]
+        );
 
         return redirect()->route('roles.index')
             ->with('success', 'تم حذف الدور بنجاح.');

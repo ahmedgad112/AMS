@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesPermissions;
 use App\Exports\AttendanceRecordsExport;
+use App\Services\ActivityLogger;
 use App\Exports\EvaluationsExport;
 use App\Exports\SupervisorDetailExport;
 use App\Exports\SupervisorsSummaryExport;
@@ -48,6 +49,8 @@ class ReportController extends Controller
 
         $filename = 'supervisors-summary-'.now()->format('Y-m-d').'.xlsx';
 
+        $this->logExport('تصدير ملخص المشرفين', $filename, $request);
+
         return Excel::download(
             new SupervisorsSummaryExport($user, $classId),
             $filename
@@ -66,6 +69,8 @@ class ReportController extends Controller
         }
 
         $filename = 'attendance-records-'.now()->format('Y-m-d').'.xlsx';
+
+        $this->logExport('تصدير سجل الحضور والغياب', $filename, $request);
 
         return Excel::download(
             new AttendanceRecordsExport(
@@ -90,6 +95,8 @@ class ReportController extends Controller
         }
 
         $filename = 'warnings-'.now()->format('Y-m-d').'.xlsx';
+
+        $this->logExport('تصدير سجل الإنذارات', $filename, $request);
 
         return Excel::download(
             new WarningsExport(
@@ -119,6 +126,8 @@ class ReportController extends Controller
 
         $filename = 'evaluations-'.now()->format('Y-m-d').'.xlsx';
 
+        $this->logExport('تصدير التقييمات', $filename, $request);
+
         return Excel::download(
             new EvaluationsExport(
                 $user,
@@ -136,6 +145,14 @@ class ReportController extends Controller
 
         $filename = 'supervisor-'.str($supervisor->name)->slug().'-'.now()->format('Y-m-d').'.xlsx';
 
+        ActivityLogger::log(
+            "تصدير كارت المشرف «{$supervisor->name}»",
+            'export',
+            'reports',
+            $supervisor,
+            ['filename' => $filename]
+        );
+
         return Excel::download(
             new SupervisorDetailExport($supervisor),
             $filename
@@ -151,5 +168,19 @@ class ReportController extends Controller
         ], [
             'date_to.after_or_equal' => 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية.',
         ]);
+    }
+
+    protected function logExport(string $description, string $filename, Request $request): void
+    {
+        ActivityLogger::log(
+            $description,
+            'export',
+            'reports',
+            null,
+            [
+                'filename' => $filename,
+                'filters' => $request->only(['class_id', 'date_from', 'date_to']),
+            ]
+        );
     }
 }

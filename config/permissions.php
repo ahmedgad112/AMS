@@ -15,6 +15,7 @@ return [
                 'create-roles' => 'إنشاء دور جديد',
                 'edit-roles' => 'تعديل صلاحيات الدور',
                 'delete-roles' => 'حذف دور',
+                'view-activity-log' => 'عرض سجل النشاط',
             ],
         ],
         'classes' => [

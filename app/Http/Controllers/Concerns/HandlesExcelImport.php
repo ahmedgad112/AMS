@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Http\Requests\ImportExcelRequest;
 use App\Imports\RawSheetImport;
+use App\Services\ActivityLogger;
 use App\Support\ImportResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
@@ -33,6 +34,19 @@ trait HandlesExcelImport
         if ($result->hasErrors()) {
             $redirect->with('import_errors', $result->errors);
         }
+
+        ActivityLogger::log(
+            "استيراد {$entityLabel} من Excel",
+            'import',
+            'imports',
+            null,
+            [
+                'entity' => $entityLabel,
+                'imported' => $result->imported,
+                'skipped' => $result->skipped,
+                'route' => $redirectRoute,
+            ]
+        );
 
         return $redirect;
     }
